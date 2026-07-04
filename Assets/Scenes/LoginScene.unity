@@ -1478,8 +1478,8 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 965721423}
   - {fileID: 612336167}
+  - {fileID: 965721423}
   m_Father: {fileID: 100010}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
@@ -1695,10 +1695,10 @@ RectTransform:
   - {fileID: 585144164}
   m_Father: {fileID: 100031}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.20261906, y: 0.091000006}
-  m_AnchorMax: {x: 0.79700005, y: 0.8725454}
-  m_AnchoredPosition: {x: 0.25532532, y: 1.5}
-  m_SizeDelta: {x: -1.5599976, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &198408732
 MonoBehaviour:
@@ -1712,7 +1712,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
-  m_Padding: {x: 0, y: 0, z: 0, w: 0}
+  m_Padding: {x: 100, y: 0, z: 100, w: 0}
   m_Softness: {x: 0, y: 0}
 --- !u!1 &361370652
 GameObject:
@@ -2095,10 +2095,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 198408731}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 123.864624, y: -0.49749756}
-  m_SizeDelta: {x: 396, y: 43}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.14985, y: -0.49749756}
+  m_SizeDelta: {x: 248.38, y: 43}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &585144165
 MonoBehaviour:
@@ -2186,7 +2186,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 59.42041, y: 10.071289, z: 61.434814, w: 8.560486}
+  m_margin: {x: 10.101196, y: 10.071289, z: 13.610107, w: 8.560486}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -2634,10 +2634,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1595829051}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 122.83984, y: -1.9974976}
-  m_SizeDelta: {x: 245.8828, y: 43}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -0.16015625, y: -1.9974976}
+  m_SizeDelta: {x: 245.88281, y: 43}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &854919210
 MonoBehaviour:
@@ -2771,10 +2771,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1595829051}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 122.32922, y: 0.0025024414}
-  m_SizeDelta: {x: 396, y: 43}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -0.13045, y: 0.0025024414}
+  m_SizeDelta: {x: 245.94, y: 43}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &910935474
 MonoBehaviour:
@@ -2862,7 +2862,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 56.902588, y: 11.58197, z: 55.89563, w: 8.560547}
+  m_margin: {x: 7.583374, y: 11.58197, z: 8.070923, w: 8.560547}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -3058,9 +3058,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 198408731}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 124.11987, y: -0.49749756}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.11987305, y: -0.49749756}
   m_SizeDelta: {x: 248.4357, y: 43}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1122245514
@@ -3510,10 +3510,10 @@ RectTransform:
   - {fileID: 910935473}
   m_Father: {fileID: 100044}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.20976192, y: 0.12736364}
-  m_AnchorMax: {x: 0.79261905, y: 0.8725454}
-  m_AnchoredPosition: {x: 0.010772705, y: 0}
-  m_SizeDelta: {x: 0.8800049, y: 2}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1595829052
 MonoBehaviour:
@@ -3527,7 +3527,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
-  m_Padding: {x: 0, y: 0, z: 0, w: 0}
+  m_Padding: {x: 100, y: 0, z: 100, w: 0}
   m_Softness: {x: 0, y: 0}
 --- !u!1 &1865780727
 GameObject:
