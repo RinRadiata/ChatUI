@@ -74,10 +74,10 @@ public sealed class LoginUIController : MonoBehaviour
 
     private async void OnLoginClicked()
     {
-        string username = usernameInput != null ? usernameInput.text.Trim() : string.Empty;
+        string inputUsername = usernameInput != null ? usernameInput.text.Trim() : string.Empty;
         string password = passwordInput != null ? passwordInput.text : string.Empty;
 
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        if (string.IsNullOrWhiteSpace(inputUsername) || string.IsNullOrWhiteSpace(password))
         {
             ShowLoginError("Please enter username and password.");
             return;
@@ -94,7 +94,7 @@ public sealed class LoginUIController : MonoBehaviour
 
         try
         {
-            ServerLoginResponse result = await ServerConnection.LoginAsync(username, password);
+            ServerLoginResponse result = await ServerConnection.LoginAsync(inputUsername, password);
 
             string message = string.IsNullOrWhiteSpace(result.Message)
                 ? (result.Success ? "Login successful." : "Login failed.")
@@ -112,8 +112,13 @@ public sealed class LoginUIController : MonoBehaviour
                 return;
             }
 
-            PlayerPrefs.SetString("Username", string.IsNullOrWhiteSpace(result.Username) ? username : result.Username);
+            string finalUsername = string.IsNullOrWhiteSpace(result.Username)
+            ? inputUsername
+            : result.Username;
+
+            PlayerPrefs.SetString("Username", finalUsername);
             PlayerPrefs.SetInt("IdAccount", result.IdAccount);
+
             idAccount = result.IdAccount;
             username = result.Username;
 

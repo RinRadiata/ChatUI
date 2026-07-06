@@ -74,11 +74,78 @@ public sealed class ChatUIController : MonoBehaviour
 
     private void Update()
     {
+        //fetch chat result pakage from server then display in UI
+        PollServerChatPackets();
+
         if (messageInput != null &&
             messageInput.isFocused &&
             (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             SendCurrentMessage();
+        }
+    }
+
+    private void PollServerChatPackets()
+    {
+        byte[] data;
+
+        while ((data = ServerConnection.GetChatData()) != null)
+        {
+            HandleServerChatPacket(data);
+        }
+    }
+
+    private void HandleServerChatPacket(byte[] data)
+    {
+        try
+        {
+            ServerPacketReader reader = new ServerPacketReader(data);
+
+            ServerCmdCode cmd = (ServerCmdCode)reader.ReadInt();
+
+            if (cmd != ServerCmdCode.Chat)
+                return;
+
+            int channelValue = reader.ReadInt();
+            string nameSender = reader.ReadString();
+            int idReceiver = reader.ReadInt();
+            string message = reader.ReadString();
+
+            ChatChannel channel = (ChatChannel)channelValue;
+
+            string receiverDisplay = idReceiver > 0 ? "id:" + idReceiver : string.Empty;
+
+            Debug.Log(
+                "client receive chat " +
+                "channel=" + channel +
+                " nameSender=" + nameSender +
+                " idReceiver=" + idReceiver +
+                " message=" + message
+            );
+
+            AddMessage(
+                channel,
+                nameSender,
+                receiverDisplay,
+                message,
+                false
+            );
+
+            RefreshMessages();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError("client fail to read chat pkg " + ex.Message);
+
+            AddMessage(
+                ChatChannel.System,
+                "client",
+                string.Empty,
+                "read chat packet failed: " + ex.Message,
+                true
+            );
+
+            RefreshMessages();
         }
     }
 
@@ -323,6 +390,7 @@ public sealed class ChatUIController : MonoBehaviour
         if (string.IsNullOrWhiteSpace(text)) return;
 
         ChatChannel sendChannel = currentSendChannel;
+
         string receiver = string.Empty;
 
         if (TryParsePrivateShortcut(text, out string shortcutReceiver, out string shortcutMessage))
@@ -365,7 +433,7 @@ public sealed class ChatUIController : MonoBehaviour
                     ChatChannel.System,
                     "Client",
                     string.Empty,
-                    "Sent packet cmd=0x0003 channel=" + ((int)sendChannel) + " receiver='" + receiver + "'.",
+                    "Sent packet cmd=0x0003 channel=" + ((int)sendChannel) + " receiver='" + receiver,
                     true
                 );
             }
@@ -399,6 +467,11 @@ public sealed class ChatUIController : MonoBehaviour
         RefreshMessages();
     }
 
+    // (shortcuts) using the receiver username, for ex: receiver username is "WhyAmIDoingThis"
+    // @WhyAmIDoingThis six seven
+    // /w WhyAmIDoingThis three six
+    // /tell WhyAmIDoingThis idk
+    // /dm WhyAmIDoingThis why im doing this
     private bool TryParsePrivateShortcut(string raw, out string receiver, out string message)
     {
         receiver = string.Empty;
@@ -416,6 +489,7 @@ public sealed class ChatUIController : MonoBehaviour
 
             receiver = text.Substring(1, space - 1).Trim();
             message = text.Substring(space + 1).Trim();
+
             return !string.IsNullOrWhiteSpace(receiver) && !string.IsNullOrWhiteSpace(message);
         }
 
@@ -428,6 +502,7 @@ public sealed class ChatUIController : MonoBehaviour
 
             receiver = parts[1].Trim().TrimStart('@');
             message = parts[2].Trim();
+
             return !string.IsNullOrWhiteSpace(receiver) && !string.IsNullOrWhiteSpace(message);
         }
 

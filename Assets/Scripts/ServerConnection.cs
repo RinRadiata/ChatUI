@@ -111,6 +111,7 @@ public static class ServerConnection
         writer.WriteInt((int)ServerCmdCode.Chat);
         writer.WriteInt(channel);
         writer.WriteInt(sender);
+
         writer.WriteString(receiver);
         writer.WriteString(message);
 
@@ -197,14 +198,17 @@ public static class ServerConnection
         switch (cmd)
         {
             case ServerCmdCode.Login:
+                Debug.Log("client receive login");
                 loginQueue.Enqueue(data);
                 break;
 
             case ServerCmdCode.Chat:
+                Debug.Log("client receive chat");
                 chatQueue.Enqueue(data);
                 break;
 
             default:
+                Debug.Log($"client receive unknown pkg cmd: {cmd}");
                 receiveQueue.Enqueue(data);
                 break;
         }
