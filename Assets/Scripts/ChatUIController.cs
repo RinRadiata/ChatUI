@@ -60,8 +60,8 @@ public sealed class ChatUIController : MonoBehaviour
 
     private void Awake()
     {
-        username = PlayerPrefs.GetString("Username", "Guest");
-        idAccount = PlayerPrefs.GetInt("IdAccount", 0);
+        username = LoginUIController.GetUsername();
+        idAccount = LoginUIController.GetIdAccount();
         accountState = (AccountState)PlayerPrefs.GetInt("AccountState", (int)AccountState.Normal);
 
         CacheSceneObjects();
@@ -357,7 +357,7 @@ public sealed class ChatUIController : MonoBehaviour
 
         try
         {
-            await ServerConnection.SendChatAsync((int)sendChannel, username, receiver, text);
+            await ServerConnection.SendChatAsync((int)sendChannel, idAccount, receiver, text);
 
             if (showPacketDebugMessages)
             {

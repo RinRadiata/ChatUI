@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading;
@@ -20,6 +21,11 @@ public static class ServerConnection
     private static ClientWebSocket socket;
     private static readonly SemaphoreSlim sendLock = new SemaphoreSlim(1, 1);
 
+    private static readonly ConcurrentQueue<byte[]> receiveQueue = new ConcurrentQueue<byte[]>();
+
+    private static readonly ConcurrentQueue<byte[]> loginQueue = new ConcurrentQueue<byte[]>();
+    private static readonly ConcurrentQueue<byte[]> chatQueue = new ConcurrentQueue<byte[]>();
+
     public static bool IsConnected
     {
         get { return socket != null && socket.State == WebSocketState.Open; }
@@ -37,6 +43,7 @@ public static class ServerConnection
 
         socket = new ClientWebSocket();
         await socket.ConnectAsync(new Uri(ServerUrl), CancellationToken.None);
+        _ = StartReceiveLoop(CancellationToken.None);
         return IsConnected;
     }
 
@@ -77,14 +84,16 @@ public static class ServerConnection
         writer.WriteString(password);
 
         await SendRawAsync(writer.ToArray());
-        byte[] responseBytes = await ReceiveRawAsync();
+        byte[] responseBytes = GetLoginData();
+
+        while (responseBytes == null || responseBytes.Length == 0)
+        {
+            await Task.Delay(100);
+            responseBytes = GetLoginData();
+        }
 
         ServerPacketReader reader = new ServerPacketReader(responseBytes);
-        int cmd = reader.ReadInt();
-
-        if (cmd != (int)ServerCmdCode.Login)
-            throw new Exception("Server returned unexpected packet cmd: " + cmd);
-
+        reader.ReadInt();
         ServerLoginResponse response = new ServerLoginResponse();
         response.Success = reader.ReadBool();
         response.IdAccount = reader.ReadInt();
@@ -93,7 +102,7 @@ public static class ServerConnection
         return response;
     }
 
-    public static async Task SendChatAsync(int channel, string sender, string receiver, string message)
+    public static async Task SendChatAsync(int channel, int sender, string receiver, string message)
     {
         if (!IsConnected)
             await ConnectAsync(ServerUrl);
@@ -101,7 +110,7 @@ public static class ServerConnection
         ServerPacketWriter writer = new ServerPacketWriter();
         writer.WriteInt((int)ServerCmdCode.Chat);
         writer.WriteInt(channel);
-        writer.WriteString(sender);
+        writer.WriteInt(sender);
         writer.WriteString(receiver);
         writer.WriteString(message);
 
@@ -143,30 +152,83 @@ public static class ServerConnection
         }
     }
 
-    private static async Task<byte[]> ReceiveRawAsync()
+    private static async Task StartReceiveLoop(CancellationToken token)
     {
-        if (!IsConnected)
-            throw new Exception("webSocket is NOT connected");
+        var buffer = new byte[4096];
+        var messageBuffer = new List<byte>();
 
-        byte[] buffer = new byte[8192];
-        List<byte> message = new List<byte>();
-        WebSocketReceiveResult result;
-
-        do
+        try
         {
-            result = await socket.ReceiveAsync(
-                new ArraySegment<byte>(buffer),
-                CancellationToken.None
-            );
+            while (!token.IsCancellationRequested && socket != null && socket.State == WebSocketState.Open)
+            {
+                WebSocketReceiveResult result;
 
-            if (result.MessageType == WebSocketMessageType.Close)
-                throw new Exception("Server closed the webSocket connection");
+                do
+                {
+                    result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), token);
 
-            for (int i = 0; i < result.Count; i++)
-                message.Add(buffer[i]);
+                    if (result.MessageType == WebSocketMessageType.Close)
+                        return;
+
+                    messageBuffer.AddRange(new ArraySegment<byte>(buffer, 0, result.Count));
+
+                } while (!result.EndOfMessage);
+
+                byte[] fullMessage = messageBuffer.ToArray();
+                messageBuffer.Clear();
+
+                HandlePacket(fullMessage);
+            }
         }
-        while (!result.EndOfMessage);
+        catch (OperationCanceledException)
+        {
+            Debug.Log("ReceiveLoop stopped.");
+        }
+        catch (Exception ex)
+        {
+            Debug.Log($"Socket: Mất kết nối tới Server! {ex}");
+        }
+    }
+    private static void HandlePacket(byte[] data)
+    {
+        ServerPacketReader reader = new ServerPacketReader(data);
+        ServerCmdCode cmd = (ServerCmdCode)reader.ReadInt();
 
-        return message.ToArray();
+        switch (cmd)
+        {
+            case ServerCmdCode.Login:
+                loginQueue.Enqueue(data);
+                break;
+
+            case ServerCmdCode.Chat:
+                chatQueue.Enqueue(data);
+                break;
+
+            default:
+                receiveQueue.Enqueue(data);
+                break;
+        }
+    }
+    public static byte[] GetLoginData()
+    {
+        if (loginQueue.TryDequeue(out var data))
+            return data;
+        return null;
+    }
+    public static byte[] GetChatData()
+    {
+        if (chatQueue.TryDequeue(out var data))
+            return data;
+        return null;
+    }
+    public static void ClearAllQueues()
+    {
+        ClearQueue(loginQueue);
+        ClearQueue(chatQueue);
+        ClearQueue(receiveQueue);
+    }
+    private static void ClearQueue(ConcurrentQueue<byte[]> queue)
+    {
+        while (queue.TryDequeue(out _)) { }
     }
 }

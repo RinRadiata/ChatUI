@@ -24,6 +24,9 @@ public sealed class LoginUIController : MonoBehaviour
 
     private Action modalOkAction;
 
+    private static int idAccount;
+    private static string username;
+
     private void Awake()
     {
         usernameInput = GetComponentInScene<TMP_InputField>("UsernameInput");
@@ -57,6 +60,8 @@ public sealed class LoginUIController : MonoBehaviour
 
         if (serverMessageText != null)
             serverMessageText.text = "Message from server: Welcome.";
+
+        Application.runInBackground = true;
     }
 
     private void Update()
@@ -109,6 +114,8 @@ public sealed class LoginUIController : MonoBehaviour
 
             PlayerPrefs.SetString("Username", string.IsNullOrWhiteSpace(result.Username) ? username : result.Username);
             PlayerPrefs.SetInt("IdAccount", result.IdAccount);
+            idAccount = result.IdAccount;
+            username = result.Username;
 
             // login packet currently returns success, idAccount, username, message only.
             // until the server sends account State, treat successful accounts as Normal.
@@ -215,5 +222,14 @@ public sealed class LoginUIController : MonoBehaviour
         }
 
         return null;
+    }
+
+    public static int GetIdAccount()
+    {
+        return idAccount;
+    }
+    public static string GetUsername()
+    {
+        return username;
     }
 }
