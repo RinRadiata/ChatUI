@@ -13,6 +13,7 @@ public sealed class ChatUIController : MonoBehaviour
         public string Time;
         public string Sender;
         public string Receiver;
+        public int IdReceiver; //for private msg filter
         public string Message;
         public bool LocalOnly;
     }
@@ -22,7 +23,7 @@ public sealed class ChatUIController : MonoBehaviour
 
     [Header("ServerProject Protocol")]
     [SerializeField] private bool addLocalMessageAfterSend = true;
-    [SerializeField] private bool showPacketDebugMessages = true;
+    [SerializeField] private bool showPacketDebugMessages = true; //set to false if evrythg is done
 
     private TMP_Text chatTitleText;
     private TMP_Text accountStatusText;
@@ -128,7 +129,8 @@ public sealed class ChatUIController : MonoBehaviour
                 nameSender,
                 receiverDisplay,
                 message,
-                false
+                false,
+                idReceiver
             );
 
             RefreshMessages();
@@ -509,7 +511,7 @@ public sealed class ChatUIController : MonoBehaviour
         return false;
     }
 
-    private void AddMessage(ChatChannel channel, string sender, string receiver, string message, bool localOnly = false)
+    private void AddMessage(ChatChannel channel, string sender, string receiver, string message, bool localOnly = false, int idReceiver = 0)
     {
         messages.Add(new ChatMessageData
         {
@@ -517,6 +519,7 @@ public sealed class ChatUIController : MonoBehaviour
             Time = DateTime.Now.ToString("HH:mm"),
             Sender = sender,
             Receiver = receiver,
+            IdReceiver = idReceiver,
             Message = message,
             LocalOnly = localOnly
         });
@@ -534,7 +537,28 @@ public sealed class ChatUIController : MonoBehaviour
         for (int i = 0; i < messages.Count; i++)
         {
             ChatMessageData data = messages[i];
-            if (currentFilter != -1 && (int)data.Channel != currentFilter) continue;
+            bool show = false;
+
+            if (currentFilter == -1)
+            {
+                // all server tab only display all-server and system msg
+                show = data.Channel == ChatChannel.AllServer ||
+                       data.Channel == ChatChannel.System;
+            }
+            else if (currentFilter == (int)ChatChannel.Private)
+            {
+                // private tab only display private msg that is sent to or received by this account
+                show = data.Channel == ChatChannel.Private &&
+                       (data.IdReceiver == idAccount || data.Sender == username);
+            }
+            else
+            {
+                show = (int)data.Channel == currentFilter;
+            }
+
+            if (!show)
+                continue;
+
             CreateMessageText(data);
         }
 
@@ -566,7 +590,7 @@ public sealed class ChatUIController : MonoBehaviour
 
         TMP_Text text = row.GetComponent<TMP_Text>();
         text.fontSize = 20f;
-        text.alignment = TextAlignmentOptions.MidlineLeft;
+        text.alignment = TextAlignmentOptions.TopLeft;
         text.richText = true;
         text.textWrappingMode = TextWrappingModes.Normal;
         text.overflowMode = TextOverflowModes.Overflow;
