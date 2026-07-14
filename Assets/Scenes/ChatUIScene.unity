@@ -3997,7 +3997,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   loginSceneName: LoginScene
-  addLocalMessageAfterSend: 0
   showPacketDebugMessages: 1
 --- !u!1 &3982152
 GameObject:

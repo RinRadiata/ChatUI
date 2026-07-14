@@ -16,13 +16,13 @@ public sealed class ChatUIController : MonoBehaviour
         public int IdReceiver; //for private msg filter
         public string Message;
         public bool LocalOnly;
+        public bool AwaitingServerEcho;
     }
 
     [Header("Scene")]
     [SerializeField] private string loginSceneName = "LoginScene";
 
     [Header("ServerProject Protocol")]
-    [SerializeField] private bool addLocalMessageAfterSend = true;
     [SerializeField] private bool showPacketDebugMessages = true; //set to false if evrythg is done
 
     private TMP_Text chatTitleText;
@@ -123,6 +123,15 @@ public sealed class ChatUIController : MonoBehaviour
                 " idReceiver=" + idReceiver +
                 " message=" + message
             );
+
+            // The UI adds an outgoing message immediately after a successful send.
+            // Newer server versions also echo private messages to the sender, so
+            // consume that echo instead of rendering the same message twice.
+            if (ConsumeOutgoingEcho(channel, nameSender, message))
+            {
+                RefreshMessages();
+                return;
+            }
 
             AddMessage(
                 channel,
@@ -440,10 +449,9 @@ public sealed class ChatUIController : MonoBehaviour
                 );
             }
 
-            if (addLocalMessageAfterSend)
-            {
-                AddMessage(sendChannel, username, receiver, text, false);
-            }
+            // always show what this user has just sent. The current main server
+            // does not echo private messages to their sender.
+            AddMessage(sendChannel, username, receiver, text, false, 0, true);
         }
         catch (Exception ex)
         {
@@ -511,7 +519,14 @@ public sealed class ChatUIController : MonoBehaviour
         return false;
     }
 
-    private void AddMessage(ChatChannel channel, string sender, string receiver, string message, bool localOnly = false, int idReceiver = 0)
+    private void AddMessage(
+        ChatChannel channel,
+        string sender,
+        string receiver,
+        string message,
+        bool localOnly = false,
+        int idReceiver = 0,
+        bool awaitingServerEcho = false)
     {
         messages.Add(new ChatMessageData
         {
@@ -521,8 +536,32 @@ public sealed class ChatUIController : MonoBehaviour
             Receiver = receiver,
             IdReceiver = idReceiver,
             Message = message,
-            LocalOnly = localOnly
+            LocalOnly = localOnly,
+            AwaitingServerEcho = awaitingServerEcho
         });
+    }
+
+    private bool ConsumeOutgoingEcho(ChatChannel channel, string sender, string message)
+    {
+        if (!string.Equals(sender, username, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        for (int i = messages.Count - 1; i >= 0; i--)
+        {
+            ChatMessageData candidate = messages[i];
+
+            if (!candidate.AwaitingServerEcho)
+                continue;
+
+            if (candidate.Channel != channel ||
+                !string.Equals(candidate.Message, message, StringComparison.Ordinal))
+                continue;
+
+            candidate.AwaitingServerEcho = false;
+            return true;
+        }
+
+        return false;
     }
 
     private void RefreshMessages()
@@ -539,11 +578,15 @@ public sealed class ChatUIController : MonoBehaviour
             ChatMessageData data = messages[i];
             bool show = false;
 
-            if (currentFilter == -1)
+            // server validation errors use the System channel. Keep them visible
+            // even while the user is on Private or Party chat.
+            if (data.Channel == ChatChannel.System)
             {
-                // all server tab only display all-server and system msg
-                show = data.Channel == ChatChannel.AllServer ||
-                       data.Channel == ChatChannel.System;
+                show = true;
+            }
+            else if (currentFilter == -1)
+            {
+                show = data.Channel == ChatChannel.AllServer;
             }
             else if (currentFilter == (int)ChatChannel.Private)
             {
@@ -585,7 +628,7 @@ public sealed class ChatUIController : MonoBehaviour
 
         LayoutElement layout = row.GetComponent<LayoutElement>();
         layout.minHeight = 42f;
-        layout.preferredHeight = data.Channel == ChatChannel.Private ? 56f : 46f;
+        layout.preferredHeight = 46f;
         layout.flexibleWidth = 1f;
 
         TMP_Text text = row.GetComponent<TMP_Text>();
@@ -612,8 +655,8 @@ public sealed class ChatUIController : MonoBehaviour
         {
             return
                 $"<color=#8ea1e1>[{data.Time}]</color> " +
-                $"<mark=#3B213B88><color={color}>  DM  @{sender}  ->  @{receiver}  </color></mark>{localTag}\n" +
-                $"<indent=24%>{message}</indent>";
+                $"<mark=#3B213B88><color={color}> DM @{sender} -> @{receiver} </color></mark>{localTag}: " +
+                message; // msg line
         }
 
         return
